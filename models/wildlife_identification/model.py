@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from keras.models import load_model
 
 BASE_DIR = Path(__file__).resolve().parent
-model = load_model(f"{BASE_DIR}/model.hdf5", compile=False)
+# model = load_model(f"{BASE_DIR}/model.hdf5", compile=False)
 
 # The list of animal classes
 animal_classes = ["antelope", "bear", "boar", "deer", "eagle", "elephant", "fox", "goat", "lion", "owl", "porcupine", "reindeer", "squirrel", "swan", "tiger", "wolf"]
