@@ -17,19 +17,18 @@ class DeforestationService():
 
     async def initiate_prediction(self, file: UploadFile, background_tasks: BackgroundTasks):
         name, extension = os.path.splitext(file.filename)
+        contents = await file.read()
 
         if extension not in [".png", ".jpg", ".jpeg", ".tif", ".laz", ".las", ".lasd"]:
             raise HTTPException(
                 status_code=400, detail="File type not supported")
 
         task_id = uuid.uuid4()
-        background_tasks.add_task(self.predict_deforestation, file, task_id)
+        background_tasks.add_task(self.predict_deforestation, contents, name, extension, task_id)
 
         return task_id
 
-    async def predict_deforestation(self, file: UploadFile, task_id: uuid.UUID):
-        name, extension = os.path.splitext(file.filename)
-        contents = await file.read()
+    async def predict_deforestation(self, contents: bytes, name: str, extension: str, task_id: uuid.UUID):
 
         if extension in [".laz"]:
             las_file = await self.__convert_laz_to_las(task_id, name, contents)
@@ -47,7 +46,7 @@ class DeforestationService():
             image = Image.open(io.BytesIO(contents))
             prediction, value, input_img = await self.__process_model(task_id, name, image)
 
-        prediction_results[task_id] = {"filename": file.filename,
+        prediction_results[task_id] = {"filename": name,
                                        "prediction": prediction,
                                        "value": value,
                                        "input_img": input_img}
