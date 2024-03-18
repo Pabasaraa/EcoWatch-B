@@ -1,1 +1,3 @@
 models/deforestation_prediction/model.hdf5
+models/classification_prediction/keras_model.h5
+/venv

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.rt_deforestation_comp import router as deforestation_router
 from routers.rt_wildlife_comp import router as wildlife_router
+from routers.rt_classification_comp import router as classification_router
 
 app = FastAPI()
 
@@ -25,3 +26,4 @@ async def health_check():
 
 app.include_router(deforestation_router, prefix="/deforestation")
 app.include_router(wildlife_router, prefix="/wildlife")
+app.include_router(classification_router, prefix="/classification")
