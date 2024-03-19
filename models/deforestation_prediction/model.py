@@ -14,31 +14,32 @@ PATCH_SIZE = 256
 n_classes = 6
 
 preprocess_input = sm.get_preprocessing(BACKBONE)
-model = load_model(f"{BASE_DIR}/model.hdf5", compile=False)
+# model = load_model(f"{BASE_DIR}/model.hdf5", compile=False)
 
 
 def predict(input):
-    img = np.array(input)
+    # img = np.array(input)
 
-    if len(img.shape) == 2:
-        img = np.stack((img,) * 3, axis=-1)
+    # if len(img.shape) == 2:
+    #     img = np.stack((img,) * 3, axis=-1)
 
-    input_img = scaler.fit_transform(
-        img.reshape(-1, img.shape[-1])).reshape(img.shape)
-    input_img = preprocess_input(input_img)
+    # input_img = scaler.fit_transform(
+    #     img.reshape(-1, img.shape[-1])).reshape(img.shape)
+    # input_img = preprocess_input(input_img)
 
-    predictions_smooth = predict_img_with_smooth_windowing(
-        input_img,
-        window_size=PATCH_SIZE,
-        subdivisions=2,
-        nb_classes=n_classes,
-        pred_func=(
-            lambda img_batch_subdiv: model.predict((img_batch_subdiv))
-        )
-    )
+    # predictions_smooth = predict_img_with_smooth_windowing(
+    #     input_img,
+    #     window_size=PATCH_SIZE,
+    #     subdivisions=2,
+    #     nb_classes=n_classes,
+    #     pred_func=(
+    #         lambda img_batch_subdiv: model.predict((img_batch_subdiv))
+    #     )
+    # )
 
-    final_prediction = np.argmax(predictions_smooth, axis=2)
-    unique_values, count = np.unique(final_prediction, return_counts=True)
-    value = {int(k): int(v) for k, v in zip(unique_values, count)}
+    # final_prediction = np.argmax(predictions_smooth, axis=2)
+    # unique_values, count = np.unique(final_prediction, return_counts=True)
+    # value = {int(k): int(v) for k, v in zip(unique_values, count)}
 
-    return final_prediction, value
+    # return final_prediction, value
+    return 32, 56

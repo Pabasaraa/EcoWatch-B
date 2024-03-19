@@ -9,4 +9,3 @@ tqdm==4.66.1
 cvlib
 fastapi
 Pillow
-"uvicorn[standard]"
