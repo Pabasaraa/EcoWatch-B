@@ -1,11 +1,12 @@
-from fastapi import BackgroundTasks, UploadFile, HTTPException
-from PIL import Image
-import asyncio
-import uuid
-import base64
 import os
-import io
-from models.wildlife_identification.model import predict
+import cv2
+import numpy as np
+# import cvlib as cv
+# from cvlib.object_detection import draw_bbox
+from keras.models import load_model
+# from openpyxl import Workbook, load_workbook
+from datetime import datetime, timedelta
+from pathlib import Path
 
 
 prediction_results = {}
@@ -13,50 +14,67 @@ prediction_results = {}
 
 class WildlifeService():
 
-    async def initiate_prediction(self, file: UploadFile):
-        name, extension = os.path.splitext(file.filename)
-        contents = await file.read()
-
-        if extension not in [".png", ".jpg", ".jpeg", ".tif"]:
-            raise HTTPException(
-                status_code=400, detail="File type not supported")
-
-        task_id = uuid.uuid4()
-
-        image = Image.open(io.BytesIO(contents))
-        prediction, count, input_img = await self.__process_model(name, image)
-
-        prediction_results[task_id] = {"filename": file.filename,
-                                        "prediction": prediction,
-                                        "count": count,
-                                        "input_img": input_img}
+    def __init__(self):
+        BASE_DIR = Path(__file__).resolve().parent
+        mod = load_model(f"{BASE_DIR}/animal_classification_model.h5", compile=False)
+        self.model = mod
+        self.animal_classes = ["antelope", "bear", "boar", "deer", "eagle", "elephant", "fox", "goat", "lion", "owl", "porcupine", "reindeer", "squirrel", "swan", "tiger", "wolf"]
+        self.workbook_path = 'animal_counts.xlsx'
+        self.wb = None
+        self.ws = None
         
-        return task_id
+
+    def process_video(self, video_path):
+        # cap = cv2.VideoCapture(video_path)
+        # frame_rate = cap.get(cv2.CAP_PROP_FPS)
+        # frame_interval = int(frame_rate * 1)
+        # frame_counter = 0
+        # animal_id = 1
         
-        
-    async def __process_model(self, name: str, input_img):
-        if input_img:
-            prediction, count = predict(input_img)
-            normalized_prediction = (
-                prediction - prediction.min()) / (prediction.max() - prediction.min()) * 255
-            prediction_image = Image.fromarray(
-                normalized_prediction.astype('uint8'))
-            buffered = io.BytesIO()
-            prediction_image.save(buffered, format="JPEG")
-            prediction_base64 = base64.b64encode(buffered.getvalue()).decode()
+        # if not os.path.exists(self.workbook_path):
+        #     self.wb = Workbook()
+        #     self.ws = self.wb.active
+        #     self.ws.append(['Animal ID', 'Frame ID', 'Animal Name', 'Animal Count', 'Frame Time'])
+        # else:
+        #     self.wb = load_workbook(self.workbook_path)
+        #     self.ws = self.wb.active
 
-            buffered_input = io.BytesIO()
-            input_img.save(buffered_input, format="JPEG")
-            input_img_base64 = base64.b64encode(
-                buffered_input.getvalue()).decode()
+        # # video_start_date = input("Enter video start date (YYYY-MM-DD): ")
+        # # video_start_time = input("Enter video start time (HH:MM:SS): ")
 
-        if prediction_base64 is None:
-            raise Exception(f'Error processing {name}')
+        # video_start_date="2024-12-12"
+        # video_start_time="12:12:00"
+        # video_start_datetime = datetime.strptime(video_start_date + ' ' + video_start_time, "%Y-%m-%d %H:%M:%S")
 
-        return prediction_base64, count, input_img_base64
-    
-    
+        # while cap.isOpened():
+        #     ret, frame = cap.read()
+        #     if not ret:
+        #         break
+            
+        #     frame_counter += 1
 
-    def get_results(self, task_id:uuid.UUID):
-        results = prediction_results.get(task_id, None)
-        return results
+        #     if frame_counter % frame_interval == 0:
+        #         boxes, labels, count = cv.detect_common_objects(frame)
+        #         animal_counts = {}
+
+        #         for label in labels:
+        #             if label.lower() in self.animal_classes:
+        #                 animal_counts[label] = animal_counts.get(label, 0) + 1
+
+        #         output = draw_bbox(frame, boxes, labels, count)
+        #         output_path = os.path.join('output_frames', 'frame_' + str(frame_counter) + '.jpg')
+        #         cv2.imwrite(output_path, output)
+
+        #         frame_time = video_start_datetime + timedelta(seconds=(frame_counter / frame_rate))
+        #         frame_time_str = frame_time.strftime("%Y-%m-%d %H:%M:%S")
+
+        #         print("Frame {}: Number of animals detected: {}".format(frame_counter, len(animal_counts)))
+        #         print("Animal names and counts:", animal_counts)
+
+        #         for animal_name, animal_count in animal_counts.items():
+        #             self.ws.append([animal_id, frame_counter, animal_name.capitalize(), animal_count, frame_time_str])
+        #             animal_id += 1
+
+        # self.wb.save(self.workbook_path)
+        # cap.release()
+        return None

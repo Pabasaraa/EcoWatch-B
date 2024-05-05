@@ -1,5 +1,6 @@
 from fastapi import BackgroundTasks, UploadFile, HTTPException
 from PIL import Image
+import numpy as np
 import asyncio
 import uuid
 import base64
@@ -11,6 +12,16 @@ from models.deforestation_prediction.preprocess_lidar import laz2las, las2tif
 # Placeholder for storing progress data and results
 task_status = {}
 prediction_results = {}
+
+colormap = {
+    0: (255, 255, 255),  # Define colors for each class label (0 to 6)
+    1: (255, 0, 0),      # For example, (R, G, B) format
+    2: (0, 255, 0),
+    3: (0, 0, 255),
+    4: (255, 255, 0),
+    5: (255, 0, 255),
+    6: (0, 255, 255)
+}
 
 
 class DeforestationService():
@@ -34,13 +45,14 @@ class DeforestationService():
             las_file = await self.__convert_laz_to_las(task_id, name, contents)
             if las_file:
                 tif_file = await self.__convert_las_to_tif(task_id, name, las_file)
-                if tif_file:
-                    prediction = await self.__process_model(task_id, name, tif_file)
+                image = Image.open(tif_file)
+                if image:
+                    prediction, value, input_img = await self.__process_model(task_id, name, image)
 
         elif extension in [".las", ".lasd"]:
             tif_file = await self.__convert_las_to_tif(task_id, name, contents)
             if tif_file:
-                prediction = await self.__process_model(task_id, name, tif_file)
+                prediction, value, input_img = await self.__process_model(task_id, name, tif_file)
 
         else:
             image = Image.open(io.BytesIO(contents))
@@ -78,12 +90,23 @@ class DeforestationService():
         await asyncio.sleep(1)
         if input_img:
             prediction, value = predict(input_img)
-            normalized_prediction = (
-                prediction - prediction.min()) / (prediction.max() - prediction.min()) * 255
-            prediction_image = Image.fromarray(
-                normalized_prediction.astype('uint8'))
+            # normalized_prediction = (
+            #     prediction - prediction.min()) / (prediction.max() - prediction.min()) * 255
+            # prediction_image = Image.fromarray(
+            #     normalized_prediction.astype('uint8'))
+            # buffered = io.BytesIO()
+            # prediction_image.save(buffered, format="JPEG")
+            # prediction_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+            prediction_colorized = np.zeros((*prediction.shape, 3), dtype=np.uint8)
+
+            for label, color in colormap.items():
+                prediction_colorized[np.where(prediction == label)] = color  # Assign color to pixels with corresponding label
+
+            prediction_image_colorized = Image.fromarray(prediction_colorized)
+
             buffered = io.BytesIO()
-            prediction_image.save(buffered, format="JPEG")
+            prediction_image_colorized.save(buffered, format="JPEG")
             prediction_base64 = base64.b64encode(buffered.getvalue()).decode()
 
             buffered_input = io.BytesIO()

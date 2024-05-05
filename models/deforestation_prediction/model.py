@@ -14,7 +14,7 @@ PATCH_SIZE = 256
 n_classes = 6
 
 preprocess_input = sm.get_preprocessing(BACKBONE)
-model = load_model(f"{BASE_DIR}/model.hdf5", compile=False)
+model = load_model(f"{BASE_DIR}/35_epochs_model.hdf5", compile=False)
 
 
 def predict(input):
