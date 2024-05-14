@@ -10,3 +10,5 @@ cvlib
 fastapi
 Pillow
 openpyxl
+yolov5
+filterpy

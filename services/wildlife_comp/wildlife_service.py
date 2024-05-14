@@ -1,80 +1,92 @@
-import os
 import cv2
+import math
 import numpy as np
-# import cvlib as cv
-# from cvlib.object_detection import draw_bbox
-from keras.models import load_model
-# from openpyxl import Workbook, load_workbook
-from datetime import datetime, timedelta
+# from ultralytics import YOLO
+# from services.wildlife_comp.sort import Sort
+import pandas as pd
 from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent
 
-prediction_results = {}
+def process_video(video_path, output_video_path):
+    # cap = cv2.VideoCapture(video_path)
+    # model = YOLO(f"{BASE_DIR}/weights/best.pt")
+
+    # if not cap.isOpened():
+    #     return {"error": "Error opening video file."}
+
+    # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    # out = cv2.VideoWriter(output_video_path, fourcc, 20.0, (int(cap.get(3)), int(cap.get(4))))
 
 
-class WildlifeService():
+    # classnames = ["Bear","Deer","Elephant","Lion","Wild boar"]
+    
+    # width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    # height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    def __init__(self):
-        BASE_DIR = Path(__file__).resolve().parent
-        mod = load_model(f"{BASE_DIR}/animal_classification_model.h5", compile=False)
-        self.model = mod
-        self.animal_classes = ["antelope", "bear", "boar", "deer", "eagle", "elephant", "fox", "goat", "lion", "owl", "porcupine", "reindeer", "squirrel", "swan", "tiger", "wolf"]
-        self.workbook_path = 'animal_counts.xlsx'
-        self.wb = None
-        self.ws = None
-        
+    # R_width_padding = 200
+    # L_width_padding = 0
+    # U_height_padding = 200
+    # D_height_padding = 0
+    # zone = np.array([[L_width_padding, height-D_height_padding], [width-R_width_padding, height-D_height_padding], [width-R_width_padding, U_height_padding], [L_width_padding, U_height_padding]], np.int32)
 
-    def process_video(self, video_path):
-        # cap = cv2.VideoCapture(video_path)
-        # frame_rate = cap.get(cv2.CAP_PROP_FPS)
-        # frame_interval = int(frame_rate * 1)
-        # frame_counter = 0
-        # animal_id = 1
-        
-        # if not os.path.exists(self.workbook_path):
-        #     self.wb = Workbook()
-        #     self.ws = self.wb.active
-        #     self.ws.append(['Animal ID', 'Frame ID', 'Animal Name', 'Animal Count', 'Frame Time'])
-        # else:
-        #     self.wb = load_workbook(self.workbook_path)
-        #     self.ws = self.wb.active
+    # tracker = Sort()
 
-        # # video_start_date = input("Enter video start date (YYYY-MM-DD): ")
-        # # video_start_time = input("Enter video start time (HH:MM:SS): ")
+    # data = {'Frame ID': [], 'Animal Name': [], 'Animal Count': []}
+    # df = pd.DataFrame(data)
 
-        # video_start_date="2024-12-12"
-        # video_start_time="12:12:00"
-        # video_start_datetime = datetime.strptime(video_start_date + ' ' + video_start_time, "%Y-%m-%d %H:%M:%S")
+    # while True:
+    #     ret, frame = cap.read()
+    #     if not ret:
+    #         break
 
-        # while cap.isOpened():
-        #     ret, frame = cap.read()
-        #     if not ret:
-        #         break
-            
-        #     frame_counter += 1
+    #     results = model(frame)
+    #     current_detections = np.empty([0,5])
 
-        #     if frame_counter % frame_interval == 0:
-        #         boxes, labels, count = cv.detect_common_objects(frame)
-        #         animal_counts = {}
+    #     animals_inside = []
 
-        #         for label in labels:
-        #             if label.lower() in self.animal_classes:
-        #                 animal_counts[label] = animal_counts.get(label, 0) + 1
+    #     for info in results:
+    #         parameters = info.boxes
+    #         for box in parameters:
+    #             x1, y1, x2, y2 = box.xyxy[0]
+    #             x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+    #             w, h = x2 - x1, y2 - y1
+    #             confidence = box.conf[0]
+    #             class_detect = box.cls[0]
+    #             class_detect = int(class_detect)
+    #             class_detect = classnames[class_detect]
+    #             conf = math.ceil(confidence * 100)
+    #             cv2.putText(frame, f'{class_detect} {conf}%', (x1 + 8, y1 - 12), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), thickness=2)
+    #             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-        #         output = draw_bbox(frame, boxes, labels, count)
-        #         output_path = os.path.join('output_frames', 'frame_' + str(frame_counter) + '.jpg')
-        #         cv2.imwrite(output_path, output)
+    #             if class_detect in ['Bear', 'Deer', 'Elephant', 'Lion', 'Wild boar']:
+    #                 detections = np.array([x1, y1, x2, y2, conf])
+    #                 current_detections = np.vstack([current_detections, detections])
+    #                 animals_inside.append(class_detect)
 
-        #         frame_time = video_start_datetime + timedelta(seconds=(frame_counter / frame_rate))
-        #         frame_time_str = frame_time.strftime("%Y-%m-%d %H:%M:%S")
+    #     cv2.polylines(frame, [zone], isClosed=True, color=(0, 0, 255), thickness=8)
 
-        #         print("Frame {}: Number of animals detected: {}".format(frame_counter, len(animal_counts)))
-        #         print("Animal names and counts:", animal_counts)
+    #     track_results = tracker.update(current_detections)
 
-        #         for animal_name, animal_count in animal_counts.items():
-        #             self.ws.append([animal_id, frame_counter, animal_name.capitalize(), animal_count, frame_time_str])
-        #             animal_id += 1
+    #     frame_id = cap.get(cv2.CAP_PROP_POS_FRAMES)
+    #     for animal in animals_inside:
+    #         df = pd.concat([df, pd.DataFrame({'Frame ID': [frame_id], 'Animal Name': [animal], 'Animal Count': [len(animals_inside)]})], ignore_index=True)
 
-        # self.wb.save(self.workbook_path)
-        # cap.release()
-        return None
+    #     cv2.putText(frame, f'Total Animals Inside Zone: {len(animals_inside)}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+
+    #     out.write(frame)
+
+    #     cv2.imshow('Video Processing', frame)
+    #     if cv2.waitKey(1) & 0xFF == ord('q'):
+    #         break
+    # video_base_name = Path(video_path).stem
+    # excel_filename = f"{video_base_name}_animal_counts.xlsx"
+    # df.to_excel(excel_filename, index=False)        
+    
+
+    # out.release()
+    # cap.release()
+    # cv2.destroyAllWindows()
+
+    # return {"filename": "animal_counts.xlsx"}
+    return 0

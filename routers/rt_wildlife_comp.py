@@ -1,26 +1,23 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from services.wildlife_comp.wildlife_service import WildlifeService
+from services.wildlife_comp.wildlife_service import process_video
 import os
 
 router = APIRouter()
-service = WildlifeService()
 
 @router.get("/")
 async def health_check():
     return {"component": "Wild Species Identification", "status": "ok"}
 
 
-@router.post("/process_video")
-async def process_video(file: UploadFile = File(...)):
+@router.post("/upload")
+async def upload_video(file: UploadFile = File(...)):
     try:
-        video_dir = 'uploaded_videos'
-        if not os.path.exists(video_dir):
-            os.makedirs(video_dir)
-        
-        video_path = os.path.join(video_dir, file.filename)
-        with open(video_path, "wb") as buffer:
+        with open(file.filename, "wb") as buffer:
             buffer.write(await file.read())
-        service.process_video(video_path)
-        return {"message": "Video processing completed successfully."}
+        
+        output_video_path = file.filename.rsplit('.', 1)[0] + '_processed.mp4'
+        
+        result = process_video(file.filename, output_video_path)
+        return {"message": "Video processing completed successfully.", "result": result}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"error": str(e)}
