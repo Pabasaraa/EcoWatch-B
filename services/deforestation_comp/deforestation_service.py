@@ -14,13 +14,19 @@ task_status = {}
 prediction_results = {}
 
 colormap = {
-    0: (255, 255, 255),  # Define colors for each class label (0 to 6)
-    1: (255, 0, 0),      # For example, (R, G, B) format
-    2: (0, 255, 0),
-    3: (0, 0, 255),
-    4: (255, 255, 0),
-    5: (255, 0, 255),
-    6: (0, 255, 255)
+    # 0: (255, 255, 255),
+    # 1: (255, 0, 0),
+    # 2: (0, 255, 0),
+    # 3: (0, 0, 255),
+    # 4: (255, 255, 0),
+    # 5: (255, 0, 255),
+    0: (115, 51, 128),
+    1: (36, 179, 83),
+    2: (250, 50, 83),
+    3: (178, 80, 80),
+    4: (10, 228, 17),
+    5: (250, 250, 55),
+    6: (0, 255, 255),
 }
 
 
@@ -47,19 +53,20 @@ class DeforestationService():
                 tif_file = await self.__convert_las_to_tif(task_id, name, las_file)
                 image = Image.open(tif_file)
                 if image:
-                    prediction, value, input_img = await self.__process_model(task_id, name, image)
+                    prediction, colorized_prediction, value, input_img = await self.__process_model(task_id, name, image)
 
         elif extension in [".las", ".lasd"]:
             tif_file = await self.__convert_las_to_tif(task_id, name, contents)
             if tif_file:
-                prediction, value, input_img = await self.__process_model(task_id, name, tif_file)
+                prediction, colorized_prediction, value, input_img = await self.__process_model(task_id, name, tif_file)
 
         else:
             image = Image.open(io.BytesIO(contents))
-            prediction, value, input_img = await self.__process_model(task_id, name, image)
+            prediction, colorized_prediction, value, input_img = await self.__process_model(task_id, name, image)
 
         prediction_results[task_id] = {"filename": name,
                                        "prediction": prediction,
+                                       "colorized_prediction": colorized_prediction,
                                        "value": value,
                                        "input_img": input_img}
 
@@ -90,13 +97,13 @@ class DeforestationService():
         await asyncio.sleep(1)
         if input_img:
             prediction, value = predict(input_img)
-            # normalized_prediction = (
-            #     prediction - prediction.min()) / (prediction.max() - prediction.min()) * 255
-            # prediction_image = Image.fromarray(
-            #     normalized_prediction.astype('uint8'))
-            # buffered = io.BytesIO()
-            # prediction_image.save(buffered, format="JPEG")
-            # prediction_base64 = base64.b64encode(buffered.getvalue()).decode()
+            normalized_prediction = (
+                prediction - prediction.min()) / (prediction.max() - prediction.min()) * 255
+            prediction_image = Image.fromarray(
+                normalized_prediction.astype('uint8'))
+            buffered = io.BytesIO()
+            prediction_image.save(buffered, format="JPEG")
+            prediction_base64 = base64.b64encode(buffered.getvalue()).decode()
 
             prediction_colorized = np.zeros((*prediction.shape, 3), dtype=np.uint8)
 
@@ -107,7 +114,7 @@ class DeforestationService():
 
             buffered = io.BytesIO()
             prediction_image_colorized.save(buffered, format="JPEG")
-            prediction_base64 = base64.b64encode(buffered.getvalue()).decode()
+            prediction_base64_colorized = base64.b64encode(buffered.getvalue()).decode()
 
             buffered_input = io.BytesIO()
             input_img.save(buffered_input, format="JPEG")
@@ -120,7 +127,7 @@ class DeforestationService():
         else:
             raise Exception(f'Error processing {name}')
 
-        return prediction_base64, value, input_img_base64
+        return prediction_base64, prediction_base64_colorized, value, input_img_base64
 
     def add_status(self, task_id, status, completed):
         if task_id not in task_status:
