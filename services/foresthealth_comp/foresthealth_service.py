@@ -23,8 +23,7 @@ class ForestHealthService():
 
         task_id = uuid.uuid4()
 
-        image = Image.open(io.BytesIO(contents))
-        sum_biomass, estimated_carbon_storage, biomass_density, carbon_density, input_img = await self.__process_model(name, image)
+        sum_biomass, estimated_carbon_storage, biomass_density, carbon_density, input_img = await self.__process_model(name, contents)
 
         prediction_results[task_id] = {"filename": file.filename,
                                         "sum_biomass": sum_biomass,
@@ -38,12 +37,19 @@ class ForestHealthService():
         
     async def __process_model(self, name: str, input_img):
         if input_img:
-            sum_biomass, estimated_carbon_storage, biomass_density, carbon_density, input_img = predict(input_img)
+            sum_biomass, estimated_carbon_storage, biomass_density, carbon_density = predict(name, input_img)
 
-        return sum_biomass, estimated_carbon_storage, biomass_density, carbon_density, input_img
+            # Open the image and convert it to a suitable mode
+            image = Image.open(io.BytesIO(input_img))
+            image = image.convert("RGB")  # Convert the image to RGB mode
+
+            buffered_input = io.BytesIO()
+            image.save(buffered_input, format="JPEG")
+            input_img_base64 = base64.b64encode(buffered_input.getvalue()).decode()
+            
+        return sum_biomass, estimated_carbon_storage, biomass_density, carbon_density, input_img_base64
     
     
-
     def get_results(self, task_id:uuid.UUID):
         results = prediction_results.get(task_id, None)
         return results
