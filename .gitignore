@@ -1,0 +1,9 @@
+models/deforestation_prediction/model.hdf5
+models/deforestation_prediction/35_epochs_model.hdf5
+models/classification_prediction/keras_model.h5
+models/wildlife_identification/model.h5
+
+models/deforestation_prediction/USGS_LPC_SC_SavannahPeeDee_2019_B19_10491821.laz
+models/deforestation_prediction/USGS_LPC_SC_SavannahPeeDee_2019_B19_10491821.tif
+
+/venv
