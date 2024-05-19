@@ -1,8 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from services.wildlife_comp.wildlife_service import process_video
+from services.wildlife_comp.wildlife_service import WildLifeService
 import os
+import uuid
 
 router = APIRouter()
+service = WildLifeService()
 
 @router.get("/")
 async def health_check():
@@ -16,8 +18,20 @@ async def upload_video(file: UploadFile = File(...)):
             buffer.write(await file.read())
         
         output_video_path = file.filename.rsplit('.', 1)[0] + '_processed.mp4'
-        
-        result = process_video(file.filename, output_video_path)
+        result = service.process_video(file.filename, output_video_path)
         return {"message": "Video processing completed successfully.", "result": result}
+    
+        # result = service.process_video(file.filename)
+        # return {"task_id": task_id}
     except Exception as e:
         return {"error": str(e)}
+
+
+@router.get("/results/{task_id}")
+async def get_results(task_id: uuid.UUID):
+    result = service.get_results(task_id)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return {"Task_ID": task_id, "Results": result}
