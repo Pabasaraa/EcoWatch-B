@@ -1,8 +1,5 @@
-from fastapi import APIRouter, WebSocket, UploadFile, BackgroundTasks, Depends, File, HTTPException
-from websockets.exceptions import ConnectionClosed
+from fastapi import APIRouter, UploadFile, File, HTTPException
 import uuid
-import asyncio
-import copy
 from services.foresthealth_comp.foresthealth_service import ForestHealthService
 
 router = APIRouter()
