@@ -19,7 +19,8 @@ class WildlifeService():
         secs = int(seconds % 60)
         return f"{hours:02}:{minutes:02}:{secs:02}"
 
-    def process_video(self, video_path, output_video_path, location, date, time, R_width_padding, L_width_padding, U_height_padding, D_height_padding):
+    def process_video(self, video_path, output_video_path, location, date, time):
+        task_id = uuid.uuid4()
         cap = cv2.VideoCapture(video_path)
         model = YOLO(f"{BASE_DIR}/weights/best.pt")
 
@@ -34,8 +35,8 @@ class WildlifeService():
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        zone = np.array([[L_width_padding, height - D_height_padding], [width - R_width_padding, height - D_height_padding], 
-                        [width - R_width_padding, U_height_padding], [L_width_padding, U_height_padding]], np.int32)
+        zone = np.array([[20, height - 20], [width - 20, height - 20], 
+                        [width - 20, 20], [20, 20]], np.int32)
 
         tracker = Sort()
 
@@ -106,8 +107,19 @@ class WildlifeService():
         cap.release()
         cv2.destroyAllWindows()
 
-        return {"filename": excel_filename}
+        # prediction_results[task_id] = {
+        #     "video": output_video_path,
+        #     "csv": excel_filename
+        # }
+        prediction_results[task_id] = {
+            "video": video_path,
+            "csv": excel_filename
+        }
+
+        return str(task_id)
     
     def get_results(self, task_id:uuid.UUID):
         results = prediction_results.get(task_id, None)
+        if results is None:
+            return {"error": "Task ID not found"}
         return results
