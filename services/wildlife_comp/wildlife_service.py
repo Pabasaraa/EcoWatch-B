@@ -64,6 +64,10 @@ class WildlifeService():
                     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                     w, h = x2 - x1, y2 - y1
                     confidence = box.conf[0]
+
+                    if confidence < 0.5:
+                        continue
+
                     class_detect = box.cls[0]
                     class_detect = int(class_detect)
                     class_detect = classnames[class_detect]
@@ -95,9 +99,9 @@ class WildlifeService():
             out.write(frame)
 
             # Comment out or remove the lines below to stop displaying the video
-            # cv2.imshow('Video Processing', frame)
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     break
+            cv2.imshow('Video Processing', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
         video_base_name = Path(video_path).stem
         excel_filename = f"{video_base_name}_animal_counts.xlsx"
@@ -113,6 +117,7 @@ class WildlifeService():
         # }
         prediction_results[task_id] = {
             "video": video_path,
+            "output": output_video_path,
             "csv": excel_filename
         }
 

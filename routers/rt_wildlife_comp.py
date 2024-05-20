@@ -32,11 +32,22 @@ async def upload_video(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/results/video/{task_id}")
+@router.get("/results/video/input/{task_id}")
 async def get_results(task_id: uuid.UUID):
     results = service.get_results(task_id)
     
     path = results["video"]
+    base_dir = os.path.dirname(os.path.realpath(__file__)) 
+    video_path = os.path.join(base_dir, f"../{path}")
+
+    return FileResponse(video_path, media_type="video/mp4")
+
+
+@router.get("/results/video/output/{task_id}")
+async def get_results(task_id: uuid.UUID):
+    results = service.get_results(task_id)
+    
+    path = results["output"]
     base_dir = os.path.dirname(os.path.realpath(__file__)) 
     video_path = os.path.join(base_dir, f"../{path}")
 

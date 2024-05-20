@@ -291,4 +291,4 @@ def predict(name, input_tif_content):
     print(f"Biomass Density: {biomass_density} kg/m²")
     print(f"Carbon Density: {carbon_density} kg/m²")
 
-    return sum_biomass, estimated_carbon_storage, biomass_density, carbon_density
+    return sum_biomass, estimated_carbon_storage, biomass_density, carbon_density, total_area_km2
